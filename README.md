@@ -24,7 +24,7 @@ To guarantee systemic operational integrity and runtime immunity against sophist
 
 ## 🖼️ Screenshot
 
-<img width="929" height="692" alt="screenshot" src="https://github.com/user-attachments/assets/d5eb36af-4e13-4d87-9b9c-235e2b266245" />
+<img width="929" height="692" alt="main-2" src="https://github.com/user-attachments/assets/31f91b3e-f733-441b-8611-711966e7455c" />
 
 ---
 ## 🛠️Technical Specifications & Architecture
@@ -92,7 +92,7 @@ The generation layer completely isolates password derivation from standard opera
 #### 📸 Subsystem Visual Interface
 Below is the operational interface of the Advanced Password Generator, demonstrating the real-time entropy accumulation matrix, with key selection calibrated based on the specific characteristics of your system. Generated cryptographic keys support ultra-secure granular lengths of **256**, **384**, **512**, **1024**, **2048**, and up to a massive **4096** bits:
 
-<img width="925" height="693" alt="Additional Entropy" src="https://github.com/user-attachments/assets/30f9a509-72f7-45eb-9642-2f06090983f0" />
+<img width="925" height="693" alt="Additional Entropy" src="https://github.com/user-attachments/assets/c78a67b6-c72b-46ec-97ed-fb70e89b2644" />
 
 ---
 
