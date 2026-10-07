@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.35327.3
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Speedcrypt", "Speedcrypt.csproj", "{679B11D9-524C-4518-AC16-B36037E21568}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpcUtility", "..\SpcUtility\SpcUtility.csproj", "{B2F3F5AE-36A9-49FF-8466-FC2A9B969BF7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpcShell", "..\SpcShell\SpcShell\SpcShell.csproj", "{67C139D1-B147-4D80-8A35-67127E3425C5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{679B11D9-524C-4518-AC16-B36037E21568}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{679B11D9-524C-4518-AC16-B36037E21568}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{679B11D9-524C-4518-AC16-B36037E21568}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{679B11D9-524C-4518-AC16-B36037E21568}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B2F3F5AE-36A9-49FF-8466-FC2A9B969BF7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B2F3F5AE-36A9-49FF-8466-FC2A9B969BF7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B2F3F5AE-36A9-49FF-8466-FC2A9B969BF7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B2F3F5AE-36A9-49FF-8466-FC2A9B969BF7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{67C139D1-B147-4D80-8A35-67127E3425C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67C139D1-B147-4D80-8A35-67127E3425C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67C139D1-B147-4D80-8A35-67127E3425C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67C139D1-B147-4D80-8A35-67127E3425C5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {98072DA8-AAF9-4638-A184-D6F5A43D8B56}
+	EndGlobalSection
+EndGlobal

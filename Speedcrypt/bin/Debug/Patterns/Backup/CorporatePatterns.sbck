@@ -1,0 +1,8 @@
+﻿Corporate-Standard16|L=16;U>=1;Lw>=1;D>=1;S>=1|0
+Corporate-Enhanced20|L=20;U>=2;Lw>=2;D>=2;S>=2;NoConsecutive=1|0
+Corporate-Strict24|L=24;U>=2;Lw>=2;D>=4;S>=2;NoSequences=1|1
+Enterprise-Strong20|L=20;U>=3;Lw>=3;D>=3;S>=2|1
+Enterprise-Strict24|L=24;U>=4;Lw>=4;D>=4;S>=2;NoSequences=1|1
+HighAssurance28|L=28;U>=3;Lw>=3;D>=5;S>=3;Blacklist=Top1000|1
+Military-TopSec30|L=30;U>=4;Lw>=4;D>=6;S>=4;NoSequences=1|1
+Passphrase-4Words|Type=passphrase;Words=4;Separator=-|0

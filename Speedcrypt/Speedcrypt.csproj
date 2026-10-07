@@ -1,0 +1,643 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="packages\NUnit.4.4.0\build\NUnit.props" Condition="Exists('packages\NUnit.4.4.0\build\NUnit.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{679B11D9-524C-4518-AC16-B36037E21568}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>Speedcrypt</RootNamespace>
+    <AssemblyName>Speedcrypt</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>true</Deterministic>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Speedcrypt.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="BouncyCastle.Cryptography, Version=2.0.0.0, Culture=neutral, PublicKeyToken=072edcf4a5328938, processorArchitecture=MSIL">
+      <HintPath>packages\BouncyCastle.Cryptography.2.6.2\lib\net461\BouncyCastle.Cryptography.dll</HintPath>
+    </Reference>
+    <Reference Include="GostCryptography, Version=2.0.11.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\GostCryptography.2.0.11\lib\net452\GostCryptography.dll</HintPath>
+    </Reference>
+    <Reference Include="Konscious.Security.Cryptography.Argon2, Version=1.3.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\Konscious.Security.Cryptography.Argon2.1.3.1\lib\net46\Konscious.Security.Cryptography.Argon2.dll</HintPath>
+    </Reference>
+    <Reference Include="Konscious.Security.Cryptography.Blake2, Version=1.1.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\Konscious.Security.Cryptography.Blake2.1.1.1\lib\net46\Konscious.Security.Cryptography.Blake2.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.ApplicationInsights, Version=2.23.0.29, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>packages\Microsoft.ApplicationInsights.2.23.0\lib\net46\Microsoft.ApplicationInsights.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>packages\Newtonsoft.Json.13.0.4\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="nunit.framework, Version=4.4.0.0, Culture=neutral, PublicKeyToken=2638cd05610744eb, processorArchitecture=MSIL">
+      <HintPath>packages\NUnit.4.4.0\lib\net462\nunit.framework.dll</HintPath>
+    </Reference>
+    <Reference Include="nunit.framework.legacy, Version=4.4.0.0, Culture=neutral, PublicKeyToken=2638cd05610744eb, processorArchitecture=MSIL">
+      <HintPath>packages\NUnit.4.4.0\lib\net462\nunit.framework.legacy.dll</HintPath>
+    </Reference>
+    <Reference Include="OpenGost.Security.Cryptography, Version=0.2.2.0, Culture=neutral, PublicKeyToken=e9224e2a5c23f433, processorArchitecture=MSIL">
+      <HintPath>packages\OpenGost.Security.Cryptography.0.2.2\lib\netstandard2.0\OpenGost.Security.Cryptography.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Collections.Immutable, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>packages\System.Collections.Immutable.8.0.0\lib\net462\System.Collections.Immutable.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Diagnostics.DiagnosticSource, Version=6.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>packages\System.Diagnostics.DiagnosticSource.6.0.0\lib\net461\System.Diagnostics.DiagnosticSource.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Formats.Asn1, Version=8.0.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>packages\System.Formats.Asn1.8.0.1\lib\net462\System.Formats.Asn1.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Management" />
+    <Reference Include="System.Memory, Version=4.0.1.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>packages\System.Memory.4.5.5\lib\net461\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reflection.Metadata, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>packages\System.Reflection.Metadata.8.0.0\lib\net462\System.Reflection.Metadata.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime" />
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>packages\System.Runtime.CompilerServices.Unsafe.6.0.0\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>packages\System.Threading.Tasks.Extensions.4.5.4\lib\net461\System.Threading.Tasks.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>packages\System.ValueTuple.4.5.0\lib\net47\System.ValueTuple.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Autotest\CRYPTO\AES\AESTest.cs" />
+    <Compile Include="Autotest\BaseBlockCipherTest.cs" />
+    <Compile Include="Autotest\CRYPTO\CAMELLIA\CamelliaTest.cs" />
+    <Compile Include="Autotest\CRYPTO\CHACHA20POLY1305\AeadTestUtilities.cs" />
+    <Compile Include="Autotest\CRYPTO\CHACHA20POLY1305\ChaCha20Poly1305Test.cs" />
+    <Compile Include="Autotest\CipherStream.cs" />
+    <Compile Include="Autotest\DIGESTS\Argon2Test.cs" />
+    <Compile Include="Autotest\DIGESTS\Assert.cs" />
+    <Compile Include="Autotest\DIGESTS\GOST3411_2012_256DigestTest.cs" />
+    <Compile Include="Autotest\DIGESTS\GOST3411_2012_512DigestTest.cs" />
+    <Compile Include="Autotest\DIGESTS\GOST94DigestTest.cs" />
+    <Compile Include="Autotest\DIGESTS\KeccakDigestTest.cs" />
+    <Compile Include="Autotest\DIGESTS\PbeParametersGenerator.cs" />
+    <Compile Include="Autotest\DIGESTS\PBKDF2\Pbkdf2Test.cs" />
+    <Compile Include="Autotest\DIGESTS\PBKDF2\Pkcs5S2ParametersGenerator.cs" />
+    <Compile Include="Autotest\DIGESTS\ShakeDigestTest.cs" />
+    <Compile Include="Autotest\DIGESTS\SkeinDigestTest.cs" />
+    <Compile Include="Autotest\DIGESTS\WhirlpoolDigestTest.cs" />
+    <Compile Include="Autotest\DIGESTS\WRAPPER\Argon2TestWrapper.cs" />
+    <Compile Include="Autotest\DIGESTS\BCryptTest.cs" />
+    <Compile Include="Autotest\DIGESTS\Blake2bDigestTest.cs" />
+    <Compile Include="Autotest\DIGESTS\Blake2sDigestTest.cs" />
+    <Compile Include="Autotest\DIGESTS\WRAPPER\Blake2sDigestWrapper.cs" />
+    <Compile Include="Autotest\DIGESTS\Blake3Test.cs" />
+    <Compile Include="Autotest\DIGESTS\BlakeTest.cs" />
+    <Compile Include="Autotest\DIGESTS\DigestTest.cs" />
+    <Compile Include="Autotest\DIGESTS\IDigest.cs" />
+    <Compile Include="Autotest\DIGESTS\MD5DigestTest.cs" />
+    <Compile Include="Autotest\DIGESTS\MD5HMacTest.cs" />
+    <Compile Include="Autotest\DIGESTS\MemUtil.cs" />
+    <Compile Include="Autotest\DIGESTS\WRAPPER\Gost3411DigestWrapper.cs" />
+    <Compile Include="Autotest\DIGESTS\WRAPPER\Gost3411_2012_256DigestWrapper.cs" />
+    <Compile Include="Autotest\DIGESTS\WRAPPER\Gost3411_2012_512DigestWrapper.cs" />
+    <Compile Include="Autotest\DIGESTS\WRAPPER\KeccakDigestWrapper.cs" />
+    <Compile Include="Autotest\DIGESTS\WRAPPER\RipeMD128DigestWrapper.cs" />
+    <Compile Include="Autotest\DIGESTS\RipeMD160DigestTest.cs" />
+    <Compile Include="Autotest\DIGESTS\WRAPPER\RipeMD160DigestWrapper.cs" />
+    <Compile Include="Autotest\DIGESTS\RipeMD160HMacTest.cs" />
+    <Compile Include="Autotest\DIGESTS\RipeMD256DigestTest.cs" />
+    <Compile Include="Autotest\DIGESTS\WRAPPER\RipeMD256DigestWrapper.cs" />
+    <Compile Include="Autotest\DIGESTS\RipeMD320DigestTest.cs" />
+    <Compile Include="Autotest\DIGESTS\WRAPPER\RipeMD320DigestWrapper.cs" />
+    <Compile Include="Autotest\DIGESTS\SCryptTest.cs" />
+    <Compile Include="Autotest\DIGESTS\SHA1HMacTest.cs" />
+    <Compile Include="Autotest\DIGESTS\SHA224DigestTest.cs" />
+    <Compile Include="Autotest\DIGESTS\SHA256DigestTest.cs" />
+    <Compile Include="Autotest\DIGESTS\SHA256HMacTest.cs" />
+    <Compile Include="Autotest\DIGESTS\SHA384DigestTest.cs" />
+    <Compile Include="Autotest\DIGESTS\SHA384HMacTest.cs" />
+    <Compile Include="Autotest\DIGESTS\SHA3DigestTest.cs" />
+    <Compile Include="Autotest\DIGESTS\SHA512DigestTest.cs" />
+    <Compile Include="Autotest\DIGESTS\SHA512HMacTest.cs" />
+    <Compile Include="Autotest\DIGESTS\WRAPPER\ShakeDigestWrapper.cs" />
+    <Compile Include="Autotest\DIGESTS\WRAPPER\SkeinDigestWrapper.cs" />
+    <Compile Include="Autotest\DIGESTS\WRAPPER\SM3DigestWrapper.cs" />
+    <Compile Include="Autotest\DIGESTS\WRAPPER\WhirlpoolDigestWrapper.cs" />
+    <Compile Include="Autotest\CRYPTO\GOST\GOST28147Test.cs" />
+    <Compile Include="Autotest\CRYPTO\IDEA\IDEATest.cs" />
+    <Compile Include="Autotest\ITest.cs" />
+    <Compile Include="Autotest\ITestResult.cs" />
+    <Compile Include="Autotest\CRYPTO\KUZNYECHIK\KuznyechikTest.cs" />
+    <Compile Include="Autotest\CRYPTO\PGP\PgpTest.cs" />
+    <Compile Include="Autotest\Platform.cs" />
+    <Compile Include="Autotest\DIGESTS\RipeMD128DigestTest.cs" />
+    <Compile Include="Autotest\CRYPTO\SERPENT\BlockCipherMonteCarloTest.cs" />
+    <Compile Include="Autotest\BlockCipherVectorTest.cs" />
+    <Compile Include="Autotest\CipherTest.cs" />
+    <Compile Include="Autotest\CRYPTO\SERPENT\SerpentTest.cs" />
+    <Compile Include="Autotest\SimpleTest.cs" />
+    <Compile Include="Autotest\SimpleTestResult.cs" />
+    <Compile Include="Autotest\DIGESTS\SM3DigestTest.cs" />
+    <Compile Include="Autotest\SpeedcryptAutotest.cs" />
+    <Compile Include="Autotest\TestFailedException.cs" />
+    <Compile Include="Autotest\CRYPTO\THREEFISH\Threefish1024Test.cs" />
+    <Compile Include="Autotest\CRYPTO\THREEFISH\Threefish256Test.cs" />
+    <Compile Include="Autotest\CRYPTO\THREEFISH\Threefish512Test.cs" />
+    <Compile Include="Autotest\CRYPTO\TWOFISH\TwofishTest.cs" />
+    <Compile Include="Combload\AESKeysize.cs" />
+    <Compile Include="Combload\Argonsize.cs" />
+    <Compile Include="Combload\Bcryptround.cs" />
+    <Compile Include="Combload\Camelliakeysize.cs" />
+    <Compile Include="Combload\Comboadd.cs" />
+    <Compile Include="Combload\RSAKeysize.cs" />
+    <Compile Include="Combload\Serpentkeysize.cs" />
+    <Compile Include="Combload\Threefishkeysize.cs" />
+    <Compile Include="Combload\Twofishkeysize.cs" />
+    <Compile Include="Crypto\AESGCM\AESGCMEncryptor.cs" />
+    <Compile Include="Crypto\AES\AESencryptor.cs" />
+    <Compile Include="Crypto\CAMELLIA\CamelliaEncryptor.cs" />
+    <Compile Include="Crypto\CryptoRollbackManager.cs" />
+    <Compile Include="Crypto\HeaderAlgo.cs" />
+    <Compile Include="Crypto\EncryptionManager.cs" />
+    <Compile Include="Crypto\GOST\GostEncryptor.cs" />
+    <Compile Include="Crypto\IDEA\IdeaEncryptor.cs" />
+    <Compile Include="Crypto\KUZNYECHIK\KuznyechikEncryptor.cs" />
+    <Compile Include="Crypto\Passwerr.cs" />
+    <Compile Include="Crypto\PGP\KeyPathValidator.cs" />
+    <Compile Include="Crypto\PGP\MiniPgpPathValidator.cs" />
+    <Compile Include="Crypto\PGP\PgpDecryptor.cs" />
+    <Compile Include="Crypto\PGP\PgpEncryptor.cs" />
+    <Compile Include="Crypto\PGP\PGPFoldersManager.cs" />
+    <Compile Include="Crypto\PGP\PgpPathValidator.cs" />
+    <Compile Include="Crypto\PGP\PGPRSAKeyCounter.cs" />
+    <Compile Include="Crypto\PGP\PgpValidationResult.cs" />
+    <Compile Include="Crypto\PGP\PgpValidator.cs" />
+    <Compile Include="Crypto\PGP\RSAkeygenerator.cs" />
+    <Compile Include="Crypto\Serpent\SerpentEncryptor.cs" />
+    <Compile Include="Crypto\Threefish\ThreefishEncryptor.cs" />
+    <Compile Include="Crypto\TwoFish\TwoFishEncryptor.cs" />
+    <Compile Include="Digests\Argon2\Argon2Hasher.cs" />
+    <Compile Include="Digests\Bcrypt\BCryptBouncy.cs" />
+    <Compile Include="Digests\Blake3\Blake3.cs" />
+    <Compile Include="Digests\Blake3\ChainingValue.cs" />
+    <Compile Include="Digests\Blake3\ChunkState.cs" />
+    <Compile Include="Digests\Blake3\Compressor.cs" />
+    <Compile Include="Digests\Blake3\Flag.cs" />
+    <Compile Include="Digests\Blake3\Output.cs" />
+    <Compile Include="Digests\Blake3\SpanExtensions.cs" />
+    <Compile Include="Digests\Blake3\State.cs" />
+    <Compile Include="Digests\Blake\Blake256.cs" />
+    <Compile Include="Digests\Blake\Blake512.cs" />
+    <Compile Include="Digests\Blake\BlakeAdapter.cs" />
+    <Compile Include="Digests\GOST\GOSTHash94.cs" />
+    <Compile Include="Digests\GOST\ReHashModule.cs" />
+    <Compile Include="Distribution\SpeedcryptDistribution.cs" />
+    <Compile Include="EstimMST\DefaultMatcherFactory.cs" />
+    <Compile Include="EstimMST\IMatcherFactory.cs" />
+    <Compile Include="EstimMST\LinqExtensions.cs" />
+    <Compile Include="EstimMST\Matcher\DateMatcher.cs" />
+    <Compile Include="EstimMST\Matcher\DictionaryMatcher.cs" />
+    <Compile Include="EstimMST\Matcher\IMatcher.cs" />
+    <Compile Include="EstimMST\Matcher\L33tMatcher.cs" />
+    <Compile Include="EstimMST\Matcher\RegexMatcher.cs" />
+    <Compile Include="EstimMST\Matcher\RepeatMatcher.cs" />
+    <Compile Include="EstimMST\Matcher\SequenceMatcher.cs" />
+    <Compile Include="EstimMST\Matcher\SpatialMatcher.cs" />
+    <Compile Include="EstimMST\PasswordScoring.cs" />
+    <Compile Include="EstimMST\Result.cs" />
+    <Compile Include="EstimMST\Translation.cs" />
+    <Compile Include="EstimMST\Utility.cs" />
+    <Compile Include="EstimMST\Zxcvbn.cs" />
+    <Compile Include="Exceptionlog\CentralLog.cs" />
+    <Compile Include="Exceptionlog\ExceptionAdvice.cs" />
+    <Compile Include="Exceptionlog\LogManager.cs" />
+    <Compile Include="FrmAbout.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmAbout.Designer.cs">
+      <DependentUpon>FrmAbout.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FrmConfig.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmConfig.Designer.cs">
+      <DependentUpon>FrmConfig.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FrmEmergency.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmEmergency.Designer.cs">
+      <DependentUpon>FrmEmergency.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FrmEntropy.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmEntropy.Designer.cs">
+      <DependentUpon>FrmEntropy.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FrmMain.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmMain.Designer.cs">
+      <DependentUpon>FrmMain.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FrmPasswgen.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmPasswgen.Designer.cs">
+      <DependentUpon>FrmPasswgen.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FrmSecurity.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmSecurity.Designer.cs">
+      <DependentUpon>FrmSecurity.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FrmSettings.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmSettings.Designer.cs">
+      <DependentUpon>FrmSettings.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FrmShell.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmShell.Designer.cs">
+      <DependentUpon>FrmShell.cs</DependentUpon>
+    </Compile>
+    <Compile Include="HASHLibraries\HASHLib.cs" />
+    <Compile Include="Interfaces\ConfigExportManagercs.cs" />
+    <Compile Include="Interfaces\ConfigImportManager.cs" />
+    <Compile Include="Interfaces\CounterResetManager.cs" />
+    <Compile Include="Interfaces\EncryptionGroupCounters.cs" />
+    <Compile Include="Interfaces\EncryptionKeyResetManager.cs" />
+    <Compile Include="Interfaces\RemoveNode.cs" />
+    <Compile Include="Interfaces\TreeEngines.cs" />
+    <Compile Include="Interfaces\UiConfigSaver.cs" />
+    <Compile Include="MasterKey\DerivedKeyEntropyCalculator.cs" />
+    <Compile Include="MasterKey\DeriveKey.cs" />
+    <Compile Include="MasterKey\DeriveRec.cs" />
+    <Compile Include="MasterKey\ImportMasterKey.cs" />
+    <Compile Include="MasterKey\MasterKeyCounter.cs" />
+    <Compile Include="MasterKey\MasterKeyDerivation.cs" />
+    <Compile Include="MasterKey\ProtectedSalt.cs" />
+    <Compile Include="MasterKey\SecureWipe.cs" />
+    <Compile Include="Menu\BMenuRenderer.cs" />
+    <Compile Include="Menu\BMenuStrip.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Menu\BToolStrip.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Menu\BToolStripContainer.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Menu\BToolStripRenderer.cs" />
+    <Compile Include="Menu\clsColor.cs" />
+    <Compile Include="Mix\Allicon.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Allicon.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Nuvola\Nuvola_128.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Nuvola_128.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Nuvola\Nuvola_64.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Nuvola_64.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Nuvola\Nuvola_16.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Nuvola_16.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Nuvola\Nuvola_22.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Nuvola_22.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Nuvola\Nuvola_32.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Nuvola_32.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Nuvola\Nuvola_48.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Nuvola_48.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Passwordgen\ComboBoxItem.cs" />
+    <Compile Include="Passwordgen\CorporatePatternParser.cs" />
+    <Compile Include="Passwordgen\PasswordProfile.cs" />
+    <Compile Include="Passwordgen\PatternItem.cs" />
+    <Compile Include="Passwordgen\PatternValidator.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="ProgressBar\PasswordStrengthControl.cs" />
+    <Compile Include="ProgressBar\QualityProgressBar.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Protect\AntiTamperProtection.cs" />
+    <Compile Include="Protect\AntiTamperSpcUtility.cs" />
+    <Compile Include="Protect\BckConfigValidator.cs" />
+    <Compile Include="Protect\ConfigSanityGuard.cs" />
+    <Compile Include="Protect\ConfigValidator.cs" />
+    <Compile Include="Protect\HashGeneratorcs.cs" />
+    <Compile Include="Protect\SpeedcryptProtection.cs" />
+    <Compile Include="SALT\AESCTRDRBGen\AesCtrDrbgRandom.cs" />
+    <Compile Include="SALT\BBS\BlumBlumShub.cs" />
+    <Compile Include="SALT\CryptoRandomCSPRNG\CryptoRandom.cs" />
+    <Compile Include="SALT\Fortuna\Accumulator\Event\EntropyEventScheduler.cs" />
+    <Compile Include="SALT\Fortuna\Accumulator\Event\IScheduledEvent.cs" />
+    <Compile Include="SALT\Fortuna\Accumulator\Event\ScheduledEvent.cs" />
+    <Compile Include="SALT\Fortuna\Accumulator\FortunaAccumulator.cs" />
+    <Compile Include="SALT\Fortuna\Accumulator\IEntropyAccumulator.cs" />
+    <Compile Include="SALT\Fortuna\Accumulator\IEntropyProvider.cs" />
+    <Compile Include="SALT\Fortuna\Accumulator\IEventScheduler.cs" />
+    <Compile Include="SALT\Fortuna\Accumulator\Pool.cs" />
+    <Compile Include="SALT\Fortuna\Accumulator\Sources\CryptoServiceProvider.cs" />
+    <Compile Include="SALT\Fortuna\Accumulator\Sources\EntropyProviderBase.cs" />
+    <Compile Include="SALT\Fortuna\Accumulator\Sources\EnvironmentUptimeProvider.cs" />
+    <Compile Include="SALT\Fortuna\Accumulator\Sources\GarbageCollectionProvider.cs" />
+    <Compile Include="SALT\Fortuna\Accumulator\Sources\ProcessorStatisticsProvider.cs" />
+    <Compile Include="SALT\Fortuna\Accumulator\Sources\SystemTimeProvider.cs" />
+    <Compile Include="SALT\Fortuna\Exceptions\FortunaException.cs" />
+    <Compile Include="SALT\Fortuna\Extensions\IPRNGFortunaProviderExtensions.cs" />
+    <Compile Include="SALT\Fortuna\Generator\FortunaGenerator.cs" />
+    <Compile Include="SALT\Fortuna\Generator\GeneratorState.cs" />
+    <Compile Include="SALT\Fortuna\Generator\IGenerator.cs" />
+    <Compile Include="SALT\Fortuna\Initialization\SeedFileDecorator.cs" />
+    <Compile Include="SALT\Fortuna\IPRNGFortunaProvider.cs" />
+    <Compile Include="SALT\Fortuna\IReseedableFortunaProvider.cs" />
+    <Compile Include="SALT\Fortuna\NumberGen.cs" />
+    <Compile Include="SALT\Fortuna\PRNGFortunaProvider.cs" />
+    <Compile Include="SALT\Fortuna\PRNGFortunaProviderFactory.cs" />
+    <Compile Include="SALT\Saltmanager.cs" />
+    <Compile Include="SALT\SystemEntropyProvider.cs" />
+    <Compile Include="SecureDesktop\SpeedcryptSecureDesktop.cs" />
+    <Compile Include="Securerase\BritishHMGIS5\HmgIs5Eraser.cs" />
+    <Compile Include="Securerase\CustomPasses\CustomEraser.cs" />
+    <Compile Include="Securerase\CustomPasses\CustomPassEvaluator.cs" />
+    <Compile Include="Securerase\CustomPasses\PassSuggestionEngine.cs" />
+    <Compile Include="Securerase\DetectionFailedException.cs" />
+    <Compile Include="Securerase\Detector.cs" />
+    <Compile Include="Securerase\DriveInfoExtended.cs" />
+    <Compile Include="Securerase\FileSystemType.cs" />
+    <Compile Include="Securerase\GermanVSITR\GermanVsitrEraser.cs" />
+    <Compile Include="Securerase\HardwareType.cs" />
+    <Compile Include="Securerase\Helper\ArrayHelper.cs" />
+    <Compile Include="Securerase\Helper\ConversionHelper.cs" />
+    <Compile Include="Securerase\Helper\CryptoHelper.cs" />
+    <Compile Include="Securerase\Helper\PaddingHelper.cs" />
+    <Compile Include="Securerase\Helper\RandomHelper.cs" />
+    <Compile Include="Securerase\Helper\ShellHelper.cs" />
+    <Compile Include="Securerase\Helper\StreamHelper.cs" />
+    <Compile Include="Securerase\NIST800-88\NistClearMethod.cs" />
+    <Compile Include="Securerase\NSACSS9\Nsacss9PassEraser.cs" />
+    <Compile Include="Securerase\NSACSS12\Nsacss12PassEraser.cs" />
+    <Compile Include="Securerase\Overwrite\Allshredder.cs" />
+    <Compile Include="Securerase\Overwrite\SecureDeleteExtensions.cs" />
+    <Compile Include="Securerase\Overwrite\ThreadSafeRandom.cs" />
+    <Compile Include="Securerase\Pathing.cs" />
+    <Compile Include="Securerase\QueryType.cs" />
+    <Compile Include="Securerase\RCMPTSSITOPSII\RCMPTSSITErase.cs" />
+    <Compile Include="Securerase\Schneier\SchneierEraser.cs" />
+    <Compile Include="Securerase\SecureDelete.cs" />
+    <Compile Include="SecureText\SecureStringExt.cs" />
+    <Compile Include="SecureText\SecureTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="SecureText\SecureTextBox.designer.cs">
+      <DependentUpon>SecureTextBox.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Passwordgen\EntropyPool.cs" />
+    <Compile Include="StringCrypto\AESGCMStringCrypt.cs" />
+    <Compile Include="StringCrypto\AESStringCrypt.cs" />
+    <Compile Include="StringCrypto\CryptoAdapter.cs" />
+    <Compile Include="StringCrypto\CryptoAdapterString.cs" />
+    <Compile Include="StringCrypto\Keymasterexpoimpo.cs" />
+    <Compile Include="StringCrypto\XChaCha20Poly1305StringCrypt.cs" />
+    <Compile Include="StringCrypto\SerpentStringCrypt.cs" />
+    <Compile Include="StringCrypto\ThreefishStringCrypt.cs" />
+    <Compile Include="StringCrypto\TwofishStringCrypt.cs" />
+    <Compile Include="StringCrypto\XCHACHA20StringCrypt.cs" />
+    <Compile Include="UI\BenchmarkEvents.cs" />
+    <Compile Include="UI\ButtonHelper.cs" />
+    <Compile Include="UI\ByteCnt.cs" />
+    <Compile Include="UI\Capturescreen.cs" />
+    <Compile Include="UI\CaretManager.cs" />
+    <Compile Include="UI\ControlExtensions.cs" />
+    <Compile Include="UI\CryptoSecurityStrength.cs" />
+    <Compile Include="UI\CursorExtensions.cs" />
+    <Compile Include="UI\CustomAlgorithmPersistence.cs" />
+    <Compile Include="UI\DirtyTracker.cs" />
+    <Compile Include="UI\DisableControlPage.cs" />
+    <Compile Include="UI\ExpoImpoBmk.cs" />
+    <Compile Include="UI\FileListHandler.cs" />
+    <Compile Include="UI\FolderContentLoader.cs" />
+    <Compile Include="UI\FolderPathValidator.cs" />
+    <Compile Include="UI\ForAllUnits.cs" />
+    <Compile Include="Crypto\XChaCha20\XChaCha20Poly1305Encryptor.cs" />
+    <Compile Include="UI\FrmMessage.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="HASHLibraries\HashSecurityStrength.cs" />
+    <Compile Include="UI\GridScrollSynchronizer.cs" />
+    <Compile Include="UI\HDInfomodel.cs" />
+    <Compile Include="UI\KeyarrowManager.cs" />
+    <Compile Include="UI\LifecycleManager.cs" />
+    <Compile Include="UI\ListViewExtensions.cs" />
+    <Compile Include="UI\ListViewHelper.cs" />
+    <Compile Include="UI\AdapterCharString.cs" />
+    <Compile Include="UI\ListViewRowAlternator.cs" />
+    <Compile Include="UI\MouseHoverLabel.cs" />
+    <Compile Include="UI\PatternHardValidator.cs" />
+    <Compile Include="UI\SpcCleanupUtility.cs" />
+    <Compile Include="UI\UiListMutationManager.cs" />
+    <Compile Include="WindosShell\SendToManager.cs" />
+    <Compile Include="WindosShell\SendToSpeedcrypt.cs" />
+    <Compile Include="WindosShell\Shellexc.cs" />
+    <Compile Include="WindosShell\ShellExtensionManager.cs" />
+    <Compile Include="WindosShell\ShellExtManager.cs" />
+    <Compile Include="UI\ShredAlgorithmInfo.cs" />
+    <Compile Include="UI\SpaceKeyBlocker.cs" />
+    <Compile Include="UI\SpeedcryptGhost.cs" />
+    <Compile Include="UI\SystemUtility.cs" />
+    <Compile Include="UI\TextBoxHoverHighlighter.cs" />
+    <Compile Include="UI\ToolStripCursor.cs" />
+    <Compile Include="UI\ToolTipManager.cs" />
+    <Compile Include="XMLConfig\AppConfigHelper.cs" />
+    <Compile Include="XMLConfig\BckConfigFile.cs" />
+    <Compile Include="XMLConfig\PrivateXmlConfig.cs" />
+    <EmbeddedResource Include="FrmAbout.resx">
+      <DependentUpon>FrmAbout.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmConfig.resx">
+      <DependentUpon>FrmConfig.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmEmergency.resx">
+      <DependentUpon>FrmEmergency.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmEntropy.resx">
+      <DependentUpon>FrmEntropy.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmMain.resx">
+      <DependentUpon>FrmMain.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmPasswgen.resx">
+      <DependentUpon>FrmPasswgen.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmSecurity.resx">
+      <DependentUpon>FrmSecurity.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmSettings.resx">
+      <DependentUpon>FrmSettings.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FrmShell.resx">
+      <DependentUpon>FrmShell.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Mix\Allicon.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Allicon.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Nuvola\Nuvola_128.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Nuvola_128.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Nuvola\Nuvola_64.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Nuvola_64.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Nuvola\Nuvola_16.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Nuvola_16.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Nuvola\Nuvola_22.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Nuvola_22.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Nuvola\Nuvola_32.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Nuvola_32.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Nuvola\Nuvola_48.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Nuvola_48.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <None Include="packages.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="SecureText\SecureTextBox.resx">
+      <DependentUpon>SecureTextBox.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Speedcrypt.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="License\Speedcrypt License.txt" />
+    <Content Include="Readme.txt" />
+    <EmbeddedResource Include="Autotest\DIGESTS\TESTVECTORS\SCRYPT\TestVectors.txt" />
+    <Content Include="Autotest\DIGESTS\TESTVECTORS\SHA3\SHA3TestVectors.txt" />
+    <Content Include="Autotest\DIGESTS\TESTVECTORS\SHAKE\SHAKETestVectors.txt" />
+    <Content Include="EstimMST\Dictionaries\english.lst" />
+    <Content Include="EstimMST\Dictionaries\female_names.lst" />
+    <Content Include="EstimMST\Dictionaries\male_names.lst" />
+    <Content Include="EstimMST\Dictionaries\passwords.lst" />
+    <Content Include="EstimMST\Dictionaries\Readme.txt" />
+    <Content Include="EstimMST\Dictionaries\surnames.lst" />
+  </ItemGroup>
+  <ItemGroup>
+    <COMReference Include="IWshRuntimeLibrary">
+      <Guid>{F935DC20-1CF0-11D0-ADB9-00C04FD58A0B}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>Questo progetto fa riferimento a uno o più pacchetti NuGet che non sono presenti in questo computer. Usare lo strumento di ripristino dei pacchetti NuGet per scaricarli. Per altre informazioni, vedere http://go.microsoft.com/fwlink/?LinkID=322105. Il file mancante è {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('packages\NUnit.4.4.0\build\NUnit.props')" Text="$([System.String]::Format('$(ErrorText)', 'packages\NUnit.4.4.0\build\NUnit.props'))" />
+  </Target>
+</Project>
