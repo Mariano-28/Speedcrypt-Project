@@ -2,8 +2,8 @@
 ### A Powerful File Encryptor & Complete Crypto Suite!
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)  
-[![GitHub issues](https://img.shields.io/github/issues/Mariano-28/Speedcrypt-File-Encryption)](https://github.com/Mariano-28/Speedcrypt-File-Encryption/issues)  
-[![GitHub stars](https://img.shields.io/github/stars/Mariano-28/Speedcrypt-File-Encryption?style=social)](https://github.com/Mariano-28/Speedcrypt-File-Encryption/stargazers)
+[![GitHub issues](https://img.shields.io/github/issues/Mariano-28/Speedcrypt-Project)](https://github.com/Mariano-28/Speedcrypt-Project/issues)  
+[![GitHub stars](https://img.shields.io/github/stars/Mariano-28/Speedcrypt-Project?style=social)](https://github.com/Mariano-28/Speedcrypt-Project/stargazers)
 
 ---
 
