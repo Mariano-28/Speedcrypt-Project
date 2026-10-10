@@ -42,7 +42,6 @@ namespace Speedcrypt.Crypto.IDEA
     /// - Stores the IV at the beginning of the encrypted file
     /// - Processes files using buffered stream I/O for efficient handling of large files
     /// - Automatically appends the .SPCR extension to encrypted files
-    /// - Invokes Passwerr.HandleDecryptionFailure() on any decryption failure
     ///
     /// Security notes:
     /// - A unique IV is generated for every encryption operation
@@ -54,88 +53,103 @@ namespace Speedcrypt.Crypto.IDEA
     /// testing, and validation lies entirely with the author.
     /// </remarks>
     public class IDEAEncryptor
-     {
-         public string EncryptedFileExtension { get; private set; } = ".SPCR"; // Speed Crypt default extension
+    {
+        public string EncryptedFileExtension { get; private set; } = ".SPCR"; // Speed Crypt default extension
+        private const int BufferSize = 65536; // 64KB buffer for optimal performance on very large files (up to 100GB+)
 
-         // Generates a random 8-byte IV for CBC mode
-         private static byte[] GenerateIV()
-         {
-             byte[] iv = new byte[8];
-             new SecureRandom().NextBytes(iv);
-             return iv;
-         }
+        // Generates a random 8-byte IV for CBC mode
+        private static byte[] GenerateIV()
+        {
+            byte[] iv = new byte[8];
+            new SecureRandom().NextBytes(iv);
+            return iv;
+        }
 
-         // Encrypts a file using IDEA CBC with PKCS7 padding (Stream-to-Stream)
-         public void EncryptFile(string inputFilePath, string outputFilePath, byte[] keyBytes)
-         {
-             string encryptedFilePath = outputFilePath + EncryptedFileExtension;
-             byte[] iv = GenerateIV();
+        // Encrypts a file using IDEA CBC with PKCS7 padding (Stream-to-Stream)
+        public void EncryptFile(string inputFilePath, string outputFilePath, byte[] keyBytes)
+        {
+            string encryptedFilePath = outputFilePath.EndsWith(EncryptedFileExtension, StringComparison.OrdinalIgnoreCase)
+                ? outputFilePath
+                : outputFilePath + EncryptedFileExtension;
 
-             BufferedBlockCipher cipher = new PaddedBufferedBlockCipher(new CbcBlockCipher(new IdeaEngine()));
-             cipher.Init(true, new ParametersWithIV(new KeyParameter(keyBytes), iv));
+            byte[] iv = GenerateIV();
 
-             using (FileStream fsOutput = new FileStream(encryptedFilePath, FileMode.Create))
-             {
-                 // Write the IV directly to the output stream
-                 fsOutput.Write(iv, 0, iv.Length);
+            BufferedBlockCipher cipher = new PaddedBufferedBlockCipher(new CbcBlockCipher(new IdeaEngine()));
+            cipher.Init(true, new ParametersWithIV(new KeyParameter(keyBytes), iv));
 
-                 using (FileStream fsInput = new FileStream(inputFilePath, FileMode.Open))
-                 {
-                     byte[] buffer = new byte[4096];
-                     int bytesRead;
+            using (FileStream fsOutput = new FileStream(encryptedFilePath, FileMode.Create, FileAccess.Write, FileShare.None, BufferSize))
+            {
+                // Write the IV directly to the output stream
+                fsOutput.Write(iv, 0, iv.Length);
 
-                     // Stream chunks directly to disk to prevent MemoryStream 2GB limit issues
-                     while ((bytesRead = fsInput.Read(buffer, 0, buffer.Length)) > 0)
-                     {
-                         byte[] output = new byte[cipher.GetOutputSize(bytesRead)];
-                         int length = cipher.ProcessBytes(buffer, 0, bytesRead, output, 0);
-                         fsOutput.Write(output, 0, length);
-                     }
+                using (FileStream fsInput = new FileStream(inputFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, BufferSize, FileOptions.SequentialScan))
+                {
+                    byte[] buffer = new byte[BufferSize];
+                    // SINGLE ALLOCATION: Pre-allocate output buffer outside the loop to completely prevent inner-loop GC allocations
+                    byte[] output = new byte[cipher.GetOutputSize(BufferSize)];
+                    int bytesRead;
 
-                     byte[] finalBlock = new byte[cipher.GetOutputSize(0)];
-                     int finalLength = cipher.DoFinal(finalBlock, 0);
-                     fsOutput.Write(finalBlock, 0, finalLength);
-                 }
-             }
-         }
+                    // Stream chunks directly to disk to prevent MemoryStream 2GB limit issues
+                    while ((bytesRead = fsInput.Read(buffer, 0, buffer.Length)) > 0)
+                    {
+                        int length = cipher.ProcessBytes(buffer, 0, bytesRead, output, 0);
+                        if (length > 0)
+                        {
+                            fsOutput.Write(output, 0, length);
+                        }
+                    }
 
-         // Decrypts a file previously encrypted with IDEA CBC (Stream-to-Stream)
-         public bool DecryptFile(string inputFilePath, string outputFilePath, byte[] keyBytes)
-         {
-             try
-             {
-                 using (FileStream fsInput = new FileStream(inputFilePath, FileMode.Open))
-                 using (FileStream fsOutput = new FileStream(outputFilePath, FileMode.Create))
-                 {
-                     byte[] iv = new byte[8];
-                     fsInput.Read(iv, 0, iv.Length);
+                    int finalLength = cipher.DoFinal(output, 0);
+                    if (finalLength > 0)
+                    {
+                        fsOutput.Write(output, 0, finalLength);
+                    }
+                }
+            }
+        }
 
-                     BufferedBlockCipher cipher = new PaddedBufferedBlockCipher(new CbcBlockCipher(new IdeaEngine()));
-                     cipher.Init(false, new ParametersWithIV(new KeyParameter(keyBytes), iv));
+        // Decrypts a file previously encrypted with IDEA CBC (Stream-to-Stream)
+        public bool DecryptFile(string inputFilePath, string outputFilePath, byte[] keyBytes)
+        {
+            try
+            {
+                using (FileStream fsInput = new FileStream(inputFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, BufferSize, FileOptions.SequentialScan))
+                using (FileStream fsOutput = new FileStream(outputFilePath, FileMode.Create, FileAccess.Write, FileShare.None, BufferSize))
+                {
+                    byte[] iv = new byte[8];
+                    if (fsInput.Read(iv, 0, iv.Length) != iv.Length) return false;
 
-                     byte[] buffer = new byte[4096];
-                     int bytesRead;
+                    BufferedBlockCipher cipher = new PaddedBufferedBlockCipher(new CbcBlockCipher(new IdeaEngine()));
+                    cipher.Init(false, new ParametersWithIV(new KeyParameter(keyBytes), iv));
 
-                     // Stream chunks directly to disk to prevent MemoryStream 2GB limit issues
-                     while ((bytesRead = fsInput.Read(buffer, 0, buffer.Length)) > 0)
-                     {
-                         byte[] output = new byte[cipher.GetOutputSize(bytesRead)];
-                         int length = cipher.ProcessBytes(buffer, 0, bytesRead, output, 0);
-                         fsOutput.Write(output, 0, length);
-                     }
+                    byte[] buffer = new byte[BufferSize];
+                    // SINGLE ALLOCATION: Pre-allocate output buffer outside the loop to completely prevent inner-loop GC allocations
+                    byte[] output = new byte[cipher.GetOutputSize(BufferSize)];
+                    int bytesRead;
 
-                     byte[] finalBlock = new byte[cipher.GetOutputSize(0)];
-                     int finalLength = cipher.DoFinal(finalBlock, 0);
-                     fsOutput.Write(finalBlock, 0, finalLength);
-                 }
+                    // Stream chunks directly to disk to prevent MemoryStream 2GB limit issues
+                    while ((bytesRead = fsInput.Read(buffer, 0, buffer.Length)) > 0)
+                    {
+                        int length = cipher.ProcessBytes(buffer, 0, bytesRead, output, 0);
+                        if (length > 0)
+                        {
+                            fsOutput.Write(output, 0, length);
+                        }
+                    }
 
-                 return true;
-             }
-             catch (Exception)
-             {
-                 Passwerr.HandleDecryptionFailure();
-                 return false;
-             }
-         }
-     } 
+                    int finalLength = cipher.DoFinal(output, 0);
+                    if (finalLength > 0)
+                    {
+                        fsOutput.Write(output, 0, finalLength);
+                    }
+                }
+
+                return true;
+            }
+            catch (Exception)
+            {                
+                return false;
+            }
+        }
+    }
 }

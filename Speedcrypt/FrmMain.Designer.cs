@@ -151,6 +151,7 @@
             this.listTest = new System.Windows.Forms.ListView();
             this.tabPagePGPKeys = new System.Windows.Forms.TabPage();
             this.grbPgp = new System.Windows.Forms.GroupBox();
+            this.btnCleartext = new System.Windows.Forms.Button();
             this.txtPGPFolderPath = new System.Windows.Forms.TextBox();
             this.labKeys = new System.Windows.Forms.Label();
             this.chkOpenFolder = new System.Windows.Forms.CheckBox();
@@ -224,7 +225,6 @@
             this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripSeparator();
             this.filePropertiesEncMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.timer2 = new System.Windows.Forms.Timer(this.components);
-            this.btnCleartext = new System.Windows.Forms.Button();
             this.bMenuStrip1.SuspendLayout();
             this.toolButton.SuspendLayout();
             this.bToolStrip.SuspendLayout();
@@ -1345,6 +1345,16 @@
             this.grbPgp.TabStop = false;
             this.grbPgp.Text = "Create PGP keys";
             // 
+            // btnCleartext
+            // 
+            this.btnCleartext.ForeColor = System.Drawing.Color.Black;
+            this.btnCleartext.Location = new System.Drawing.Point(87, 130);
+            this.btnCleartext.Name = "btnCleartext";
+            this.btnCleartext.Size = new System.Drawing.Size(80, 75);
+            this.btnCleartext.TabIndex = 291;
+            this.btnCleartext.Text = "Clear Text";
+            this.btnCleartext.UseVisualStyleBackColor = true;
+            // 
             // txtPGPFolderPath
             // 
             this.txtPGPFolderPath.Location = new System.Drawing.Point(10, 76);
@@ -2004,16 +2014,6 @@
             // timer2
             // 
             this.timer2.Interval = 1000;
-            // 
-            // btnCleartext
-            // 
-            this.btnCleartext.ForeColor = System.Drawing.Color.Black;
-            this.btnCleartext.Location = new System.Drawing.Point(87, 130);
-            this.btnCleartext.Name = "btnCleartext";
-            this.btnCleartext.Size = new System.Drawing.Size(80, 75);
-            this.btnCleartext.TabIndex = 291;
-            this.btnCleartext.Text = "Clear Text";
-            this.btnCleartext.UseVisualStyleBackColor = true;
             // 
             // FrmMain
             // 

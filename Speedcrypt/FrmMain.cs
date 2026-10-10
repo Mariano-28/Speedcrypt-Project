@@ -1500,7 +1500,7 @@ namespace Speedcrypt
                     // 2. Clear the session journal file after the encryption process completes
                     // Flushes the temporary crash recovery journal file upon successful cryptographic serialization pass
                     CryptoRollbackManager.ClearSessionJournal();
-
+                    
                     // Releases UI control bindings and restores default structural interface configurations
                     StopTimer();
 
@@ -1511,7 +1511,7 @@ namespace Speedcrypt
                     listFiles.Items.Clear();
 
                     // Invalidate layout visualization graphs and updates underlying cryptographic node schemas
-                    UpdateNodes();
+                    UpdateNodes();                    
 
                     // Recalibrates telemetry counters publishing updated execution metrics tracking parameters
                     FileListHandler.RefreshTotals(listFiles, labFileTot, ProgressBar, contextMenuFile);
@@ -1542,8 +1542,6 @@ namespace Speedcrypt
                 {
                     // 4. Clear the session journal file after the decryption process completes
                     CryptoRollbackManager.ClearSessionJournal();
-
-                    StopTimer();
 
                     // Defensively retains damaged file indicators within the visualization grid if HMAC authentication signatures fail
                     if (_hmacFail == false)
@@ -4169,73 +4167,79 @@ namespace Speedcrypt
                             // =================================================================
                             // NON-PGP ENCRYPT
                             // =================================================================
-                            else
+                             else
+                             {
+                                 string spcrFile = filePath + ".SPCR";
+
+                                 EncryptionManager.EncryptFile(filePath, filePath, Hashpass,
+                                     int.Parse(Regex.Match(listSett.Items[1].SubItems[2].Text, @"\d+").Value, System.Globalization.CultureInfo.InvariantCulture),
+                                     engineName
+                                 );
+
+                                 string header = $"SPCR|{engineName}|{sessionGroup}{Environment.NewLine}";
+                                 byte[] headerBytes = Encoding.UTF8.GetBytes(header);
+
+                                 string tempFile = spcrFile + ".tmp";
+
+                                 using (FileStream original = new FileStream(spcrFile, FileMode.Open, FileAccess.Read, FileShare.Read))
+                                 using (FileStream final = new FileStream(tempFile, FileMode.Create, FileAccess.Write, FileShare.None))
+                                 using (HMACSHA256 hmac = new HMACSHA256(Filepass))
+                                 {
+                                     final.Write(headerBytes, 0, headerBytes.Length);
+                                     hmac.TransformBlock(headerBytes, 0, headerBytes.Length, null, 0);
+
+                                     byte[] buffer = new byte[1024 * 1024];
+                                     int read;
+
+                                     while ((read = original.Read(buffer, 0, buffer.Length)) > 0)
+                                     {
+                                         final.Write(buffer, 0, read);
+                                         hmac.TransformBlock(buffer, 0, read, null, 0);
+                                     }
+
+                                     hmac.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
+
+                                     byte[] mac = hmac.Hash;
+                                     final.Write(mac, 0, mac.Length);
+
+                                     // CRITICAL ENTERPRISE I/O FLUSH: Force hardware serialization to guarantee integrity of trailing MAC signature blocks.
+                                     final.Flush(true);
+                                 }
+
+                                 if (File.Exists(spcrFile)) File.Delete(spcrFile);
+                                 File.Move(tempFile, spcrFile);
+
+                                 if (IsFileEncrypted(filePath, spcrFile))
+                                 {
+                                     UiListMutationManager.SafeRemoveItem(this, listFiles, fileItem, labRemainingFiles);
+                                 }
+
+                                 var allKeys = AppConfigHelper.XmlConfig.GetAllKeyValuePairs();
+                                 var engineParentKey = allKeys.Keys.FirstOrDefault(k => k.StartsWith(engineName + "EencryptedSalt-" + sessionGroup));
+
+                                 if (engineParentKey != null)
+                                 {
+                                     string childKeyName = $"{Guid.NewGuid():N}_{Path.GetFileName(filePath)}";
+
+                                     // SECURE METADATA RESOLUTION: Extract absolute cryptographic size directly from the finalized storage target.
+                                     FileInfo fi = new FileInfo(spcrFile);
+
+                                     string sizeKB = string.Format("{0:#,##0} KB", fi.Length / 1024).Replace("0 KB", "1 KB");
+                                     string sizeExtended = fi.Strbytes();
+
+                                     string normalizedChildPath = Path.GetFullPath(spcrFile).Trim().Trim('"');
+
+                                     string childValue = $"{normalizedChildPath}|{sizeKB}|{fileItem.SubItems[4].Text}|" +
+                                                          $"{sizeExtended}|{engineName}|{listSett.Items[1].SubItems[2].Text}|{sessionGroup}";
+
+                                     AppConfigHelper.XmlConfig.SetChild(engineParentKey, childKeyName, childValue);
+                                 }
+                             }                           
+                            if (listFiles.Items.Count == 0)
                             {
-                                string spcrFile = filePath + ".SPCR";
-
-                                EncryptionManager.EncryptFile(filePath, filePath, Hashpass,
-                                    int.Parse(Regex.Match(listSett.Items[1].SubItems[2].Text, @"\d+").Value, System.Globalization.CultureInfo.InvariantCulture),
-                                    engineName
-                                );
-
-                                string header = $"SPCR|{engineName}|{sessionGroup}{Environment.NewLine}";
-                                byte[] headerBytes = Encoding.UTF8.GetBytes(header);
-
-                                string tempFile = spcrFile + ".tmp";
-
-                                using (FileStream original = new FileStream(spcrFile, FileMode.Open, FileAccess.Read, FileShare.Read))
-                                using (FileStream final = new FileStream(tempFile, FileMode.Create, FileAccess.Write, FileShare.None))
-                                using (HMACSHA256 hmac = new HMACSHA256(Filepass))
-                                {
-                                    final.Write(headerBytes, 0, headerBytes.Length);
-                                    hmac.TransformBlock(headerBytes, 0, headerBytes.Length, null, 0);
-
-                                    byte[] buffer = new byte[1024 * 1024];
-                                    int read;
-
-                                    while ((read = original.Read(buffer, 0, buffer.Length)) > 0)
-                                    {
-                                        final.Write(buffer, 0, read);
-                                        hmac.TransformBlock(buffer, 0, read, null, 0);
-                                    }
-
-                                    hmac.TransformFinalBlock(Array.Empty<byte>(), 0, 0);
-
-                                    byte[] mac = hmac.Hash;
-                                    final.Write(mac, 0, mac.Length);
-
-                                    // CRITICAL ENTERPRISE I/O FLUSH: Force hardware serialization to guarantee integrity of trailing MAC signature blocks.
-                                    final.Flush(true);
-                                }
-
-                                if (File.Exists(spcrFile)) File.Delete(spcrFile);
-                                File.Move(tempFile, spcrFile);
-
-                                if (IsFileEncrypted(filePath, spcrFile))
-                                {
-                                    UiListMutationManager.SafeRemoveItem(this, listFiles, fileItem, labRemainingFiles);
-                                }
-
-                                var allKeys = AppConfigHelper.XmlConfig.GetAllKeyValuePairs();
-                                var engineParentKey = allKeys.Keys.FirstOrDefault(k => k.StartsWith(engineName + "EencryptedSalt-" + sessionGroup));
-
-                                if (engineParentKey != null)
-                                {
-                                    string childKeyName = $"{Guid.NewGuid():N}_{Path.GetFileName(filePath)}";
-
-                                    // SECURE METADATA RESOLUTION: Extract absolute cryptographic size directly from the finalized storage target.
-                                    FileInfo fi = new FileInfo(spcrFile);
-
-                                    string sizeKB = string.Format("{0:#,##0} KB", fi.Length / 1024).Replace("0 KB", "1 KB");
-                                    string sizeExtended = fi.Strbytes();
-
-                                    string normalizedChildPath = Path.GetFullPath(spcrFile).Trim().Trim('"');
-
-                                    string childValue = $"{normalizedChildPath}|{sizeKB}|{fileItem.SubItems[4].Text}|" +
-                                                         $"{sizeExtended}|{engineName}|{listSett.Items[1].SubItems[2].Text}|{sessionGroup}";
-
-                                    AppConfigHelper.XmlConfig.SetChild(engineParentKey, childKeyName, childValue);
-                                }
+                                labOperation.Text = "Purging matrix... please wait";
+                                labOperation.ForeColor = Color.Red;
+                                labOperation.Update();                                
                             }
 
                             Allshredder.Execute(listSett.Items[25].SubItems[2].Text, filePath, isCustomClassic, isCustomUser, tempList);
@@ -4286,6 +4290,10 @@ namespace Speedcrypt
                     AppConfigHelper.Save();
 
                     listFiles.Items.Clear();
+
+                    labOperation.Text = "Reading for processing";
+                    labOperation.ForeColor = Color.Black;
+                    labOperation.Update();                    
                 }
             });
         }     
@@ -4898,6 +4906,8 @@ namespace Speedcrypt
                 }
                 finally
                 {
+                    StopTimer();
+
                     AppConfigHelper.Save();
 
                     Arrayclear();

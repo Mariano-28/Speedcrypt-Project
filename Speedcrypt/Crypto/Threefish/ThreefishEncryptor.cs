@@ -46,7 +46,6 @@ namespace Speedcrypt.Crypto.Threefish
     /// - Performs a pre-decryption HMAC verification pass before decrypting
     /// - Uses buffered stream processing for efficient handling of large files
     /// - Automatically appends the .SPCR extension to encrypted files
-    /// - Invokes Passwerr.HandleDecryptionFailure() on authentication or decryption failures
     ///
     /// Security notes:
     /// - Encrypt-then-MAC construction ensures ciphertext integrity before decryption
@@ -231,8 +230,7 @@ namespace Speedcrypt.Crypto.Threefish
                 return true;
             }
             catch (Exception)
-            {
-                Passwerr.HandleDecryptionFailure();
+            {               
                 return false;
             }
         }

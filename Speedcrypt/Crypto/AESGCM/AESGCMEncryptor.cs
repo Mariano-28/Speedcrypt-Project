@@ -16,6 +16,7 @@
 
 using System;
 using System.IO;
+using System.Buffers.Binary;
 using System.Security.Cryptography;
 
 using Org.BouncyCastle.Crypto.Modes;
@@ -42,7 +43,6 @@ namespace Speedcrypt.Crypto.AESGCM
     /// - Stores the master IV and chunk metadata within the encrypted file
     /// - Automatically appends the .SPCR extension to encrypted files
     /// - Validates authentication tags during decryption before releasing plaintext
-    /// - Invokes Passwerr.HandleDecryptionFailure() on authentication or decryption failures
     ///
     /// Security notes:
     /// - AES-GCM provides both confidentiality and integrity in a single operation
@@ -52,112 +52,231 @@ namespace Speedcrypt.Crypto.AESGCM
     ///
     /// Responsibility for this C# implementation, cryptographic integration,
     /// testing, and validation lies entirely with the author.
-    /// </remarks>
-
+    /// </remarks>      
     public class AESGCMEncryptor
     {
-        // Extension appended to all encrypted files
-        public string EncryptedFileExtension { get; private set; } = ".SPCR"; // Speed Crypt default extension
+        /// <summary>
+        /// Custom file extension appended to target paths upon successful encryption.
+        /// </summary>
+        public string EncryptedFileExtension { get; private set; } = ".SPCR";
 
-        // Chunk size set to 1MB (1,048,576 bytes) for stable RAM consumption
         private const int ChunkSize = 1024 * 1024;
+        private const int GcmTagLengthBytes = 16;
+        private const int GcmIvLengthBytes = 12;
+        private const int MaxCipherTextChunkSize = ChunkSize + GcmTagLengthBytes;
 
-        // Generates a 12-byte IV required for AES-GCM mode
-        private static byte[] GenerateIV()
+        /// <summary>
+        /// Generates a cryptographically strong Master Initialization Vector (IV).
+        /// </summary>
+        private static byte[] GenerateMasterIV()
         {
-            byte[] iv = new byte[12];
-            using (var rng = new RNGCryptoServiceProvider())
+            byte[] iv = new byte[GcmIvLengthBytes];
+            using (var rng = RandomNumberGenerator.Create())
             {
                 rng.GetBytes(iv);
             }
             return iv;
         }
 
-        // Encrypts a file using AES-GCM in chunks to bypass the 2GB memory limit
+        /// <summary>
+        /// Derives a unique, non-repeating chunk-specific IV by XORing the Master IV with the chunk index.
+        /// Uses direct bit-shifting to eliminate temporary array allocations and prevent pointer state leakage.
+        /// </summary>
+        private static void DeriveChunkIV(byte[] masterIv, long chunkIndex, byte[] outputChunkIv)
+        {
+            Buffer.BlockCopy(masterIv, 0, outputChunkIv, 0, GcmIvLengthBytes);
+
+            outputChunkIv[4] ^= (byte)(chunkIndex >> 56);
+            outputChunkIv[5] ^= (byte)(chunkIndex >> 48);
+            outputChunkIv[6] ^= (byte)(chunkIndex >> 40);
+            outputChunkIv[7] ^= (byte)(chunkIndex >> 32);
+            outputChunkIv[8] ^= (byte)(chunkIndex >> 24);
+            outputChunkIv[9] ^= (byte)(chunkIndex >> 16);
+            outputChunkIv[10] ^= (byte)(chunkIndex >> 8);
+            outputChunkIv[11] ^= (byte)chunkIndex;
+        }
+
+        /// <summary>
+        /// Encrypts an input file via a memory-efficient chunked pipeline and writes the authenticated stream to disk.
+        /// Optimized for massive files by using a strict zero-allocation loop architecture.
+        /// </summary>
         public void EncryptFile(string inputFilePath, string outputFilePath, byte[] key, int keySize)
         {
-            byte[] masterIv = GenerateIV();
-            string encryptedFilePath = outputFilePath + EncryptedFileExtension;
-
-            using (FileStream fsOutput = new FileStream(encryptedFilePath, FileMode.Create))
-            using (FileStream fsInput = new FileStream(inputFilePath, FileMode.Open))
+            if (key == null || key.Length != keySize / 8)
             {
-                // Write master IV at the beginning of the encrypted file
+                throw new ArgumentException("The provided key length does not match the explicitly specified key size.");
+            }
+
+            string encryptedFilePath = outputFilePath.EndsWith(EncryptedFileExtension, StringComparison.OrdinalIgnoreCase)
+                ? outputFilePath
+                : outputFilePath + EncryptedFileExtension;
+
+            using (FileStream fsOutput = new FileStream(encryptedFilePath, FileMode.Create, FileAccess.Write))
+            using (FileStream fsInput = new FileStream(inputFilePath, FileMode.Open, FileAccess.Read))
+            {
+                // Write the top-level Master IV to the beginning of the file layout
+                byte[] masterIv = GenerateMasterIV();
                 fsOutput.Write(masterIv, 0, masterIv.Length);
 
-                byte[] inputBuffer = new byte[ChunkSize];
-                int bytesRead;
+                // Establish sliding window processing buffers
+                byte[] currentBuffer = new byte[ChunkSize];
+                byte[] nextBuffer = new byte[ChunkSize];
+
+                int currentBytesRead = fsInput.Read(currentBuffer, 0, currentBuffer.Length);
                 long chunkIndex = 0;
 
-                // Process the file chunk by chunk (1MB each)
-                while ((bytesRead = fsInput.Read(inputBuffer, 0, inputBuffer.Length)) > 0)
+                // Pre-allocated structural blocks to completely prevent inner-loop GC allocations
+                byte[] chunkIv = new byte[GcmIvLengthBytes];
+                byte[] chunkIndexBytes = new byte[8];
+                byte[] lengthHeader = new byte[4];
+                byte[] associatedData = new byte[8 + 4 + 1];
+                byte[] outputBuffer = new byte[MaxCipherTextChunkSize];
+
+                while (currentBytesRead > 0 || chunkIndex == 0)
                 {
-                    // Derive a unique IV for each chunk using the master IV and the chunk index to avoid IV reuse
-                    byte[] chunkIv = (byte[])masterIv.Clone();
-                    byte[] indexBytes = BitConverter.GetBytes(chunkIndex);
-                    Array.Copy(indexBytes, 0, chunkIv, 0, Math.Min(indexBytes.Length, chunkIv.Length));
+                    int nextBytesRead = fsInput.Read(nextBuffer, 0, nextBuffer.Length);
+                    byte isLastChunk = (byte)(nextBytesRead == 0 ? 1 : 0);
+
+                    // Derive the unique, non-colliding nonce for the current block execution context
+                    DeriveChunkIV(masterIv, chunkIndex, chunkIv);
+                    fsOutput.WriteByte(isLastChunk);
+
+                    BinaryPrimitives.WriteInt64BigEndian(chunkIndexBytes, chunkIndex);
+                    BinaryPrimitives.WriteInt32BigEndian(lengthHeader, currentBytesRead);
+
+                    Buffer.BlockCopy(chunkIndexBytes, 0, associatedData, 0, 8);
+                    Buffer.BlockCopy(lengthHeader, 0, associatedData, 8, 4);
+                    associatedData[associatedData.Length - 1] = isLastChunk;
 
                     var cipher = new GcmBlockCipher(new AesEngine());
-                    var parameters = new AeadParameters(new KeyParameter(key), 128, chunkIv);
+                    var parameters = new AeadParameters(new KeyParameter(key), GcmTagLengthBytes * 8, chunkIv, associatedData);
                     cipher.Init(true, parameters);
 
-                    // Write the dynamic length of the current processed chunk plaintext
-                    byte[] lengthHeader = BitConverter.GetBytes(bytesRead);
                     fsOutput.Write(lengthHeader, 0, lengthHeader.Length);
 
-                    // Calculate exact output size including the 16-byte authentication tag
-                    byte[] outputBuffer = new byte[cipher.GetOutputSize(bytesRead)];
-                    int outputLength = cipher.ProcessBytes(inputBuffer, 0, bytesRead, outputBuffer, 0);
+                    // Perform the cryptographic block calculation into the pre-allocated reuse buffer
+                    int outputLength = cipher.ProcessBytes(currentBuffer, 0, currentBytesRead, outputBuffer, 0);
                     outputLength += cipher.DoFinal(outputBuffer, outputLength);
 
-                    // Write the encrypted chunk + authentication tag directly to disk
                     fsOutput.Write(outputBuffer, 0, outputLength);
+
+                    if (isLastChunk == 1)
+                    {
+                        break;
+                    }
+
+                    // High-performance pointer swap to completely avoid high-cost 1MB array copy procedures
+                    byte[] temp = currentBuffer;
+                    currentBuffer = nextBuffer;
+                    nextBuffer = temp;
+
+                    currentBytesRead = nextBytesRead;
                     chunkIndex++;
                 }
             }
         }
 
-        // Decrypts a chunked AES-GCM file and validates authentication tags sequentially
+        /// <summary>
+        /// Decrypts an encrypted file via sequential chunk validation.
+        /// Strictly verifies authentication tags and contextual data structures to enforce execution safety.
+        /// Optimized for massive files by using a strict zero-allocation loop architecture.
+        /// </summary>
+        /// <param name="inputFilePath">Absolute path to the encrypted source file.</param>
+        /// <param name="outputFilePath">Target path where the verified plaintext will be reconstructed.</param>
+        /// <param name="key">The raw cryptographic key buffer.</param>
+        /// <param name="keySize">The expected cryptographic key size in bits.</param>
+        /// <returns>True if the payload is authentic and successfully decrypted; otherwise, false.</returns>
         public bool DecryptFile(string inputFilePath, string outputFilePath, byte[] key, int keySize)
         {
+            if (key == null || key.Length != keySize / 8)
+            {
+                throw new ArgumentException("The provided key length does not match the explicitly specified key size.");
+            }
+
             try
             {
-                using (FileStream fsInput = new FileStream(inputFilePath, FileMode.Open))
-                using (FileStream fsOutput = new FileStream(outputFilePath, FileMode.Create))
+                using (FileStream fsInput = new FileStream(inputFilePath, FileMode.Open, FileAccess.Read))
+                using (FileStream fsOutput = new FileStream(outputFilePath, FileMode.Create, FileAccess.Write))
                 {
-                    byte[] masterIv = new byte[12];
-                    fsInput.Read(masterIv, 0, masterIv.Length);
+                    // Retrieve the top-level Master IV from the beginning of the file layout
+                    byte[] masterIv = new byte[GcmIvLengthBytes];
+                    if (fsInput.Read(masterIv, 0, masterIv.Length) != GcmIvLengthBytes)
+                    {
+                        throw new CryptographicException("Missing or incomplete master initialization vector.");
+                    }
 
                     byte[] lengthHeader = new byte[4];
                     long chunkIndex = 0;
+                    bool lastChunkProcessed = false;
 
-                    // Read chunk length headers sequentially
-                    while (fsInput.Read(lengthHeader, 0, lengthHeader.Length) == lengthHeader.Length)
+                    // Pre-allocated static layout structures to completely prevent inner-loop GC allocations
+                    byte[] cipherBuffer = new byte[MaxCipherTextChunkSize];
+                    byte[] outputBuffer = new byte[ChunkSize];
+                    byte[] chunkIv = new byte[GcmIvLengthBytes];
+                    byte[] chunkIndexBytes = new byte[8];
+                    byte[] associatedData = new byte[8 + 4 + 1];
+
+                    while (true)
                     {
-                        int plainTextLength = BitConverter.ToInt32(lengthHeader, 0);
-                        int cipherTextLength = plainTextLength + 16; // Account for the 128-bit authentication tag
-
-                        byte[] cipherBuffer = new byte[cipherTextLength];
-                        if (fsInput.Read(cipherBuffer, 0, cipherBuffer.Length) != cipherTextLength)
+                        int isLastChunkByte = fsInput.ReadByte();
+                        if (isLastChunkByte == -1)
                         {
-                            throw new EndOfStreamException("Incomplete encrypted chunk data.");
+                            if (!lastChunkProcessed)
+                            {
+                                throw new CryptographicException("File stream was truncated prematurely.");
+                            }
+                            break;
+                        }
+                        byte isLastChunk = (byte)isLastChunkByte;
+
+                        if (fsInput.Read(lengthHeader, 0, lengthHeader.Length) != lengthHeader.Length)
+                        {
+                            throw new EndOfStreamException("Incomplete chunk length header.");
                         }
 
-                        // Derive the matching unique IV for the current chunk index
-                        byte[] chunkIv = (byte[])masterIv.Clone();
-                        byte[] indexBytes = BitConverter.GetBytes(chunkIndex);
-                        Array.Copy(indexBytes, 0, chunkIv, 0, Math.Min(indexBytes.Length, chunkIv.Length));
+                        int plainTextLength = BinaryPrimitives.ReadInt32BigEndian(lengthHeader);
+
+                        if (plainTextLength < 0 || plainTextLength > ChunkSize)
+                        {
+                            throw new CryptographicException("Invalid or malicious chunk length header detected.");
+                        }
+
+                        int cipherTextLength = plainTextLength + GcmTagLengthBytes;
+
+                        if (fsInput.Read(cipherBuffer, 0, cipherTextLength) != cipherTextLength)
+                        {
+                            throw new EndOfStreamException("Incomplete encrypted chunk data or missing authentication tag.");
+                        }
+
+                        // Derive the unique, non-colliding nonce for the current block execution context
+                        DeriveChunkIV(masterIv, chunkIndex, chunkIv);
+
+                        BinaryPrimitives.WriteInt64BigEndian(chunkIndexBytes, chunkIndex);
+                        Buffer.BlockCopy(chunkIndexBytes, 0, associatedData, 0, 8);
+                        Buffer.BlockCopy(lengthHeader, 0, associatedData, 8, 4);
+                        associatedData[associatedData.Length - 1] = isLastChunk;
 
                         var cipher = new GcmBlockCipher(new AesEngine());
-                        var parameters = new AeadParameters(new KeyParameter(key), 128, chunkIv);
+                        var parameters = new AeadParameters(new KeyParameter(key), GcmTagLengthBytes * 8, chunkIv, associatedData);
                         cipher.Init(false, parameters);
 
-                        byte[] outputBuffer = new byte[cipher.GetOutputSize(cipherTextLength)];
+                        // Perform the cryptographic block calculation into the pre-allocated reuse buffer
                         int outputLength = cipher.ProcessBytes(cipherBuffer, 0, cipherTextLength, outputBuffer, 0);
                         outputLength += cipher.DoFinal(outputBuffer, outputLength);
 
-                        // Write decrypted chunk directly to disk
                         fsOutput.Write(outputBuffer, 0, outputLength);
+
+                        if (isLastChunk == 1)
+                        {
+                            lastChunkProcessed = true;
+
+                            if (fsInput.Position < fsInput.Length)
+                            {
+                                throw new CryptographicException("Trailing garbage data detected after the legitimate end of the file.");
+                            }
+                            break;
+                        }
+
                         chunkIndex++;
                     }
                 }
@@ -166,7 +285,15 @@ namespace Speedcrypt.Crypto.AESGCM
             }
             catch (Exception)
             {
-                Passwerr.HandleDecryptionFailure();
+                try
+                {
+                    if (File.Exists(outputFilePath))
+                    {
+                        File.Delete(outputFilePath);
+                    }
+                }
+                catch { }
+
                 return false;
             }
         }

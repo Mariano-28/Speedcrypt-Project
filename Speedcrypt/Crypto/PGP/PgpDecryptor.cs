@@ -39,7 +39,6 @@ namespace Speedcrypt.Crypto.PGP
     /// - Streams decrypted output to disk using a 128 KB buffer for large files
     /// - Verifies integrity protection packets when present
     /// - Clears sensitive buffers and passphrases after use
-    /// - Delegates decryption failures to Passwerr.HandleDecryptionFailure()
     ///
     /// Security notes:
     /// - Uses hybrid OpenPGP security model (public-key + symmetric encryption)
@@ -147,8 +146,7 @@ namespace Speedcrypt.Crypto.PGP
             }
             catch (Exception)
             {
-                ForAllUnits.DecSett = 1;
-                Passwerr.HandleDecryptionFailure();
+                ForAllUnits.DecSett = 1;                
             }
             finally
             {

@@ -14,11 +14,11 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //https://www.gnu.org/licenses/gpl-3.0.html
 
+using System;
 using System.IO;
-
 using Org.BouncyCastle.Security;
-using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Engines;
+using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Paddings;
 using Org.BouncyCastle.Crypto.Parameters;
 
@@ -41,7 +41,6 @@ namespace Speedcrypt.Crypto.CAMELLIA
     /// - Stores the IV at the beginning of the encrypted file
     /// - Processes files using buffered stream I/O for efficient handling of large files
     /// - Automatically appends the .SPCR extension to encrypted files
-    /// - Invokes Passwerr.HandleDecryptionFailure() on any decryption failure
     ///
     /// Security notes:
     /// - A unique IV is generated for every encryption operation
@@ -56,20 +55,15 @@ namespace Speedcrypt.Crypto.CAMELLIA
     {
         // Extension appended to all encrypted files
         public string EncryptedFileExtension { get; private set; } = ".SPCR"; // Speed Crypt default extension
+        private const int BufferSize = 65536; // 64KB buffer for optimal performance on large files up to 100GB+
 
         private void ValidateKey(ref byte[] key, int keySize)
         {
             int required = keySize / 8;
-            if (key.Length < required)
+            if (key.Length != required)
             {
                 byte[] k = new byte[required];
-                System.Array.Copy(key, k, key.Length);
-                key = k;
-            }
-            else if (key.Length > required)
-            {
-                byte[] k = new byte[required];
-                System.Array.Copy(key, k, required);
+                System.Array.Copy(key, k, Math.Min(key.Length, required));
                 key = k;
             }
         }
@@ -88,27 +82,27 @@ namespace Speedcrypt.Crypto.CAMELLIA
             ValidateKey(ref key, keySize);
             byte[] iv = GenerateIV();
 
-            string outFile = outputFilePath + EncryptedFileExtension;
+            string outFile = outputFilePath.EndsWith(EncryptedFileExtension, StringComparison.OrdinalIgnoreCase)
+                ? outputFilePath
+                : outputFilePath + EncryptedFileExtension;
 
-            using (var fsIn = new FileStream(inputFilePath, FileMode.Open))
-            using (var fsOut = new FileStream(outFile, FileMode.Create))
+            var cipher = new PaddedBufferedBlockCipher(new CbcBlockCipher(new CamelliaEngine()));
+            cipher.Init(true, new ParametersWithIV(new KeyParameter(key), iv));
+
+            // Use FileOptions.SequentialScan to optimize low-level sequential I/O operations for huge files
+            using (var fsIn = new FileStream(inputFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, BufferSize, FileOptions.SequentialScan))
+            using (var fsOut = new FileStream(outFile, FileMode.Create, FileAccess.Write, FileShare.None, BufferSize))
             {
                 // Write the IV directly to the output stream
                 fsOut.Write(iv, 0, iv.Length);
 
-                var cipher = new PaddedBufferedBlockCipher(new CbcBlockCipher(new CamelliaEngine()));
-                cipher.Init(true, new ParametersWithIV(new KeyParameter(key), iv));
-
-                // 64KB buffer for optimal performance on large files up to 100GB+
-                byte[] inputBuffer = new byte[65536];
+                byte[] inputBuffer = new byte[BufferSize];
+                // SINGLE ALLOCATION: Allocate the maximum required output buffer once outside the loop to eliminate GC pressure
+                byte[] outputBuffer = new byte[cipher.GetOutputSize(BufferSize)];
                 int bytesRead;
 
                 while ((bytesRead = fsIn.Read(inputBuffer, 0, inputBuffer.Length)) > 0)
                 {
-                    // Dynamically calculate the safe output size required for the processed chunk
-                    int updateSize = cipher.GetUpdateOutputSize(bytesRead);
-                    byte[] outputBuffer = new byte[updateSize > 0 ? updateSize : cipher.GetOutputSize(bytesRead)];
-
                     int len = cipher.ProcessBytes(inputBuffer, 0, bytesRead, outputBuffer, 0);
                     if (len > 0)
                     {
@@ -117,11 +111,10 @@ namespace Speedcrypt.Crypto.CAMELLIA
                 }
 
                 // Process the final block and padding
-                byte[] finalBuffer = new byte[cipher.GetOutputSize(0)];
-                int finalLen = cipher.DoFinal(finalBuffer, 0);
+                int finalLen = cipher.DoFinal(outputBuffer, 0);
                 if (finalLen > 0)
                 {
-                    fsOut.Write(finalBuffer, 0, finalLen);
+                    fsOut.Write(outputBuffer, 0, finalLen);
                 }
             }
         }
@@ -133,25 +126,24 @@ namespace Speedcrypt.Crypto.CAMELLIA
             {
                 ValidateKey(ref key, keySize);
 
-                using (var fsIn = new FileStream(inputFilePath, FileMode.Open))
-                using (var fsOut = new FileStream(outputFilePath, FileMode.Create))
+                var cipher = new PaddedBufferedBlockCipher(new CbcBlockCipher(new CamelliaEngine()));
+
+                // Use FileOptions.SequentialScan to optimize low-level sequential I/O operations for huge files
+                using (var fsIn = new FileStream(inputFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, BufferSize, FileOptions.SequentialScan))
+                using (var fsOut = new FileStream(outputFilePath, FileMode.Create, FileAccess.Write, FileShare.None, BufferSize))
                 {
                     byte[] iv = new byte[16];
                     if (fsIn.Read(iv, 0, iv.Length) != iv.Length) return false;
 
-                    var cipher = new PaddedBufferedBlockCipher(new CbcBlockCipher(new CamelliaEngine()));
                     cipher.Init(false, new ParametersWithIV(new KeyParameter(key), iv));
 
-                    // 64KB buffer for optimal performance on large files up to 100GB+
-                    byte[] inputBuffer = new byte[65536];
+                    byte[] inputBuffer = new byte[BufferSize];
+                    // SINGLE ALLOCATION: Allocate the maximum required output buffer once outside the loop to eliminate GC pressure
+                    byte[] outputBuffer = new byte[cipher.GetOutputSize(BufferSize)];
                     int bytesRead;
 
                     while ((bytesRead = fsIn.Read(inputBuffer, 0, inputBuffer.Length)) > 0)
                     {
-                        // Dynamically calculate the safe output size required for the processed chunk
-                        int updateSize = cipher.GetUpdateOutputSize(bytesRead);
-                        byte[] outputBuffer = new byte[updateSize > 0 ? updateSize : cipher.GetOutputSize(bytesRead)];
-
                         int len = cipher.ProcessBytes(inputBuffer, 0, bytesRead, outputBuffer, 0);
                         if (len > 0)
                         {
@@ -160,19 +152,17 @@ namespace Speedcrypt.Crypto.CAMELLIA
                     }
 
                     // Process the final decrypted block
-                    byte[] finalBuffer = new byte[cipher.GetOutputSize(0)];
-                    int finalLen = cipher.DoFinal(finalBuffer, 0);
+                    int finalLen = cipher.DoFinal(outputBuffer, 0);
                     if (finalLen > 0)
                     {
-                        fsOut.Write(finalBuffer, 0, finalLen);
+                        fsOut.Write(outputBuffer, 0, finalLen);
                     }
                 }
 
                 return true;
             }
             catch
-            {
-                Passwerr.HandleDecryptionFailure();
+            {                
                 return false;
             }
         }

@@ -14,7 +14,12 @@
 // Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //https://www.gnu.org/licenses/gpl-3.0.html 
 
+using System.IO;
+using System;
 using System.Windows.Forms;
+using Org.BouncyCastle.Crypto.Engines;
+using Org.BouncyCastle.Crypto.Modes;
+using Org.BouncyCastle.Crypto.Parameters;
 using Speedcrypt.Exceptionlog;
 
 namespace Speedcrypt.Crypto
@@ -40,58 +45,58 @@ namespace Speedcrypt.Crypto
     /// testing, and validation lies entirely with the author.
     /// </remarks>
     public static class Passwerr
-    {        
-        public static void HandleDecryptionFailure()
-        {
-              try
-              {
-                  // Stop the timer immediately if available
-                  var frm = FrmSettings.Instance;
-                  var tmr = (frm != null) ? frm.timer1 : null;
-                  if (tmr != null)
-                  {
-                      tmr.Stop();
-                      tmr.Enabled = false;
-                  }
+    {
+         public static void HandleDecryptionFailure()
+         {
+               try
+               {
+                   // Stop the timer immediately if available
+                   var frm = FrmSettings.Instance;
+                   var tmr = (frm != null) ? frm.timer1 : null;
+                   if (tmr != null)
+                   {
+                       tmr.Stop();
+                       tmr.Enabled = false;
+                   }
 
-                  // Select a valid UI control to invoke on
-                  Control uiTarget = null;
-                  if (frm != null && frm.IsHandleCreated && !frm.IsDisposed)
-                  {
-                      uiTarget = frm;
-                  }
-                  else
-                  {
-                      // Fallback: use any available form as UI target
-                      foreach (Form f in Application.OpenForms)
-                      {
-                          if (f != null && f.IsHandleCreated && !f.IsDisposed)
-                          {
-                              uiTarget = f;
-                              break;
-                          }
-                      }
-                  }
+                   // Select a valid UI control to invoke on
+                   Control uiTarget = null;
+                   if (frm != null && frm.IsHandleCreated && !frm.IsDisposed)
+                   {
+                       uiTarget = frm;
+                   }
+                   else
+                   {
+                       // Fallback: use any available form as UI target
+                       foreach (Form f in Application.OpenForms)
+                       {
+                           if (f != null && f.IsHandleCreated && !f.IsDisposed)
+                           {
+                               uiTarget = f;
+                               break;
+                           }
+                       }
+                   }
 
-                  // Show the MessageBox through BeginInvoke to ensure the timer is stopped first
-                  if (uiTarget != null)
-                  {
-                      uiTarget.BeginInvoke((MethodInvoker)delegate
-                      {
-                          var owner = uiTarget as IWin32Window;
-                          CentralLog.LogEvent("DECRYPT", "Decryption failed: incorrect password or corrupted file.",  nameof(HandleDecryptionFailure));
-                          //MessageBox.Show(owner, "Decryption failed: incorrect password or corrupted file.", ForAllUnits.BoxErr, MessageBoxButtons.OK, MessageBoxIcon.Error);
-                      });
-                  }
-                  else
-                  {
-                    CentralLog.LogEvent("DECRYPT", "Decryption failed: incorrect password or corrupted file.", nameof(HandleDecryptionFailure));                    
-                  }
-              }
-            catch
-            {                
-                // Silent exception handling
-            }
-        }
+                   // Show the MessageBox through BeginInvoke to ensure the timer is stopped first
+                   if (uiTarget != null)
+                   {
+                       uiTarget.BeginInvoke((MethodInvoker)delegate
+                       {
+                           var owner = uiTarget as IWin32Window;
+                           CentralLog.LogEvent("DECRYPT", "Decryption failed: incorrect password or corrupted file.",  nameof(HandleDecryptionFailure));
+                           //MessageBox.Show(owner, "Decryption failed: incorrect password or corrupted file.", ForAllUnits.BoxErr, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                       });
+                   }
+                   else
+                   {
+                     CentralLog.LogEvent("DECRYPT", "Decryption failed: incorrect password or corrupted file.", nameof(HandleDecryptionFailure));                    
+                   }
+               }
+             catch
+             {                
+                 // Silent exception handling
+             }
+         }        
     }
 }

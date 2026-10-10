@@ -42,7 +42,6 @@ namespace Speedcrypt.Crypto.XChaCha20Poly1305
     /// - Performs full authentication before decryption output is accepted
     /// - Uses buffered stream processing for efficient handling of large files
     /// - Automatically appends the .SPCR extension to encrypted files
-    /// - Invokes Passwerr.HandleDecryptionFailure() on authentication or decryption failures
     ///
     /// Security notes:
     /// - AEAD construction (XChaCha20-Poly1305) provides confidentiality and integrity together
@@ -106,8 +105,7 @@ namespace Speedcrypt.Crypto.XChaCha20Poly1305
                 return true;
             }
             catch (Exception)
-            {
-                Passwerr.HandleDecryptionFailure();
+            {                
                 return false;
             }
         }
@@ -226,5 +224,5 @@ namespace Speedcrypt.Crypto.XChaCha20Poly1305
             }
             return iv;
         }
-    }
+    } 
 }

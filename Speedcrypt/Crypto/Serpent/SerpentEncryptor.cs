@@ -47,7 +47,6 @@ namespace Speedcrypt.Crypto.Serpent
     /// - Performs a pre-decryption HMAC verification pass before decryption
     /// - Uses buffered stream processing for efficient handling of large files
     /// - Automatically appends the .SPCR extension to encrypted files
-    /// - Invokes Passwerr.HandleDecryptionFailure() on integrity or decryption failure
     ///
     /// Security notes:
     /// - Encrypt-then-MAC construction ensures integrity before decryption
@@ -221,8 +220,7 @@ namespace Speedcrypt.Crypto.Serpent
             }
             catch (Exception)
             {
-                Passwerr.HandleDecryptionFailure();
-                return false;
+               return false;
             }
         }
     }

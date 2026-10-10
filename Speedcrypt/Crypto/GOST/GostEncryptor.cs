@@ -41,7 +41,6 @@ namespace Speedcrypt.Crypto.GOST
     /// - Stores the IV at the beginning of the encrypted file
     /// - Processes files using buffered stream I/O for efficient handling of large files
     /// - Automatically appends the .SPCR extension to encrypted files
-    /// - Invokes Passwerr.HandleDecryptionFailure() on any decryption failure
     ///
     /// Security notes:
     /// - A unique IV is generated for every encryption operation
@@ -56,6 +55,7 @@ namespace Speedcrypt.Crypto.GOST
     {
         // Extension appended to encrypted files
         public string EncryptedFileExtension { get; private set; } = ".SPCR"; // Speed Crypt default extension
+        private const int BufferSize = 65536; // 64KB buffer for optimal performance on very large files (up to 100GB+)
 
         // Generates a cryptographically secure 8-byte IV (block size of GOST 28147-89)
         private static byte[] GenerateIV()
@@ -79,9 +79,11 @@ namespace Speedcrypt.Crypto.GOST
                 throw new ArgumentException("GOST 28147-89 requires a 256-bit (32-byte) key.");
 
             byte[] iv = GenerateIV();
-            string encryptedFilePath = outputFilePath + EncryptedFileExtension;
+            string encryptedFilePath = outputFilePath.EndsWith(EncryptedFileExtension, StringComparison.OrdinalIgnoreCase)
+                ? outputFilePath
+                : outputFilePath + EncryptedFileExtension;
 
-            using (var fsOutput = new FileStream(encryptedFilePath, FileMode.Create))
+            using (var fsOutput = new FileStream(encryptedFilePath, FileMode.Create, FileAccess.Write, FileShare.None, BufferSize))
             {
                 // Write IV at the beginning of the file
                 fsOutput.Write(iv, 0, iv.Length);
@@ -91,18 +93,15 @@ namespace Speedcrypt.Crypto.GOST
 
                 cipher.Init(true, new ParametersWithIV(new KeyParameter((byte[])key.Clone()), (byte[])iv.Clone()));
 
-                // 64KB buffer for optimal performance on very large files (up to 100GB+)
-                byte[] buffer = new byte[65536];
+                byte[] buffer = new byte[BufferSize];
+                // SINGLE ALLOCATION: Allocate the maximum required output buffer once outside the loop
+                byte[] output = new byte[cipher.GetOutputSize(BufferSize)];
 
-                using (var fsInput = new FileStream(inputFilePath, FileMode.Open))
+                using (var fsInput = new FileStream(inputFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, BufferSize, FileOptions.SequentialScan))
                 {
                     int bytesRead;
                     while ((bytesRead = fsInput.Read(buffer, 0, buffer.Length)) > 0)
                     {
-                        // Dynamically allocate only the strict required size for the processed chunk
-                        int updateSize = cipher.GetUpdateOutputSize(bytesRead);
-                        byte[] output = new byte[updateSize > 0 ? updateSize : cipher.GetOutputSize(bytesRead)];
-
                         int len = cipher.ProcessBytes(buffer, 0, bytesRead, output, 0);
                         if (len > 0)
                         {
@@ -110,11 +109,10 @@ namespace Speedcrypt.Crypto.GOST
                         }
                     }
 
-                    byte[] finalBlock = new byte[cipher.GetOutputSize(0)];
-                    int finalLen = cipher.DoFinal(finalBlock, 0);
+                    int finalLen = cipher.DoFinal(output, 0);
                     if (finalLen > 0)
                     {
-                        fsOutput.Write(finalBlock, 0, finalLen);
+                        fsOutput.Write(output, 0, finalLen);
                     }
                 }
             }
@@ -132,27 +130,24 @@ namespace Speedcrypt.Crypto.GOST
 
             try
             {
-                using (var fsInput = new FileStream(inputFilePath, FileMode.Open))
-                using (var fsOutput = new FileStream(outputFilePath, FileMode.Create))
+                using (var fsInput = new FileStream(inputFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, BufferSize, FileOptions.SequentialScan))
+                using (var fsOutput = new FileStream(outputFilePath, FileMode.Create, FileAccess.Write, FileShare.None, BufferSize))
                 {
                     byte[] iv = new byte[8];
-                    fsInput.Read(iv, 0, iv.Length);
+                    if (fsInput.Read(iv, 0, iv.Length) != iv.Length) return false;
 
                     var engine = new Gost28147Engine();
                     var cipher = new PaddedBufferedBlockCipher(new CbcBlockCipher(engine));
 
                     cipher.Init(false, new ParametersWithIV(new KeyParameter((byte[])key.Clone()), (byte[])iv.Clone()));
 
-                    // 64KB buffer for optimal performance on very large files (up to 100GB+)
-                    byte[] buffer = new byte[65536];
+                    byte[] buffer = new byte[BufferSize];
+                    // SINGLE ALLOCATION: Prevent inner-loop GC allocations during decryption
+                    byte[] output = new byte[cipher.GetOutputSize(BufferSize)];
                     int bytesRead;
 
                     while ((bytesRead = fsInput.Read(buffer, 0, buffer.Length)) > 0)
                     {
-                        // Dynamically allocate only the strict required size for the processed chunk
-                        int updateSize = cipher.GetUpdateOutputSize(bytesRead);
-                        byte[] output = new byte[updateSize > 0 ? updateSize : cipher.GetOutputSize(bytesRead)];
-
                         int len = cipher.ProcessBytes(buffer, 0, bytesRead, output, 0);
                         if (len > 0)
                         {
@@ -160,19 +155,17 @@ namespace Speedcrypt.Crypto.GOST
                         }
                     }
 
-                    byte[] finalBlock = new byte[cipher.GetOutputSize(0)];
-                    int finalLen = cipher.DoFinal(finalBlock, 0);
+                    int finalLen = cipher.DoFinal(output, 0);
                     if (finalLen > 0)
                     {
-                        fsOutput.Write(finalBlock, 0, finalLen);
+                        fsOutput.Write(output, 0, finalLen);
                     }
                 }
 
                 return true;
             }
             catch (Exception)
-            {
-                Passwerr.HandleDecryptionFailure();
+            {                
                 return false;
             }
         }

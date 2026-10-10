@@ -299,7 +299,7 @@ namespace Speedcrypt.Crypto.AES
             catch
             {
                 // Catches pipeline exceptions or authentication failures to invoke global UI alert wrappers safely
-                Passwerr.HandleDecryptionFailure();
+                //Passwerr.HandleDecryptionFailure();
                 return false;
             }
         }
